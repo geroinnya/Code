@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>MINER </title>
+    <style>
+        * {
+            user-select: none;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, #1a1a2e, #0f0f1a);
+            min-height: 100vh;
+            font-family: 'Inter', 'Segoe UI', system-ui, monospace;
+            overflow-x: hidden;
+        }
+
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .auth-modal {
+            background: linear-gradient(145deg, #1e1a2e, #0f0d1c);
+            border-radius: 48px;
+            padding: 32px 28px;
+            width: 90%;
+            max-width: 420px;
+            border: 1px solid #ffaa55;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+            text-align: center;
+        }
+        .auth-modal h2 {
+            color: #ffdd99;
+            margin-bottom: 24px;
+            font-size: 2rem;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 14px 18px;
+            margin: 12px 0;
+            background: #0c0920;
+            border: 1px solid #ffaa55;
+            border-radius: 60px;
+            color: #ffdfb3;
+            font-size: 1rem;
+            outline: none;
+        }
+        .auth-input:focus {
+            border-color: #ffcc66;
+            box-shadow: 0 0 10px #ffaa55;
+        }
+        .auth-btn {
+            background: linear-gradient(145deg, #f5a623, #d46b1a);
+            width: 100%;
+            padding: 12px;
+            margin-top: 16px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+        }
+        .auth-switch {
+            margin-top: 18px;
+            color: #ffcc88;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .error-msg {
+            color: #ff8866;
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+        .server-status {
+            font-size: 0.75rem;
+            color: #ffaa66;
+            margin-bottom: 12px;
+            padding: 6px;
+            background: #00000055;
+            border-radius: 20px;
+        }
+        .fullscreen {
+            width: 100%;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .game-container {
+            width: 100%;
+            max-width: 1100px;
+            background: rgba(12, 10, 22, 0.75);
+            backdrop-filter: blur(16px);
+            border-radius: 56px;
+            padding: 24px 30px 32px;
+            border: 1px solid rgba(255, 180, 60, 0.5);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.6);
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 22px;
+            border-radius: 100px;
+            margin-bottom: 25px;
+            border: 1px solid #ffaa44;
+        }
+        .balance-box {
+            background: #000000aa;
+            padding: 6px 24px;
+            border-radius: 60px;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            border: 1px solid #ffcc66;
+        }
+        .balance-label { font-size: 0.8rem; color: #ffdd99; }
+        .balance-value { font-size: 2rem; font-weight: 800; color: #fff0c0; font-family: monospace; }
+        .currency-icon { font-size: 1.2rem; color: #ffcc66; }
+        .user-info {
+            background: #000000aa;
+            padding: 6px 24px;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .username-display { color: #ffdd99; font-weight: bold; }
+        .logout-btn {
+            background: #4a2a1a;
+            padding: 4px 14px;
+            font-size: 0.8rem;
+        }
+        .top-right-group { display: flex; gap: 14px; flex-wrap: wrap; }
+        .action-btn {
+            background: linear-gradient(145deg, #ffaa33, #e07c1f);
+            border: none;
+            padding: 8px 22px;
+            border-radius: 60px;
+            font-weight: 700;
+            color: #1e1707;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #7a3e00;
+            transition: 0.07s linear;
+        }
+        .action-btn:active { transform: translateY(2px); }
+        .mine-area {
+            background: rgba(0, 0, 0, 0.55);
+            border-radius: 44px;
+            padding: 22px;
+            margin-bottom: 20px;
+            border: 1px solid #ffaa55;
+        }
+        .mine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .mine-stats {
+            display: flex;
+            gap: 20px;
+            background: #00000066;
+            padding: 8px 24px;
+            border-radius: 60px;
+        }
+        .mine-stat { font-family: monospace; font-weight: bold; }
+        .mine-stat span:first-child { color: #ffcc88; font-size: 0.75rem; }
+        .mine-stat span:last-child { color: #ffe3aa; font-size: 1.3rem; margin-left: 6px; }
+        .mine-selector {
+            display: flex;
+            gap: 12px;
+            background: #00000066;
+            padding: 6px 20px;
+            border-radius: 60px;
+        }
+        .mine-count-btn {
+            background: #1e1a2e;
+            border: 1px solid #ffaa55;
+            padding: 6px 18px;
+            border-radius: 40px;
+            color: #ffdd99;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .mine-count-btn.active {
+            background: #ffaa33;
+            color: #1a1202;
+            box-shadow: 0 0 12px #ffaa55;
+        }
+        .grid-32 {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 12px;
+            background: #070511;
+            border-radius: 32px;
+            padding: 20px;
+            border: 1px solid #ffaa55;
+            margin-bottom: 20px;
+        }
+        .cell {
+            aspect-ratio: 1 / 1;
+            background: linear-gradient(145deg, #1f1b2e, #121020);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid #ffaa5533;
+            color: #ffdd99;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            transition: 0.08s linear;
+        }
+        .cell:hover:not(.opened) {
+            transform: scale(0.96);
+            border-color: #ffcc66;
+            background: #2a2542;
+        }
+        .cell.opened { 
+            background: #0f0c1c; 
+            cursor: default;
+            transform: none;
+        }
+        .cell.mine { background: #4a1a0e; border-color: #ff6644; color: #ffaa77; }
+        .cell.gem { background: #1f3a1f; border-color: #88ff88; color: #ccffaa; }
+        .current-multiplier-big {
+            font-size: 2.8rem;
+            font-weight: 800;
+            font-family: monospace;
+            background: linear-gradient(135deg, #ffdd99, #ffaa44);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 18px #ffaa55;
+            display: inline-block;
+            padding: 4px 28px;
+            border-radius: 80px;
+            background-color: #00000077;
+        }
+        .bet-panel {
+            background: #00000077;
+            border-radius: 60px;
+            padding: 16px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+            border: 1px solid #ffaa55;
+        }
+        .bet-control {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            background: #00000055;
+            padding: 6px 24px;
+            border-radius: 60px;
+        }
+        #betAmount {
+            background: #0c0920;
+            border: 1px solid #ffaa55;
+            padding: 8px 18px;
+            border-radius: 50px;
+            color: #ffdfb3;
+            width: 140px;
+            text-align: center;
+        }
+        button {
+            background: linear-gradient(145deg, #e6932e, #c56612);
+            border: none;
+            padding: 10px 32px;
+            border-radius: 60px;
+            font-weight: bold;
+            color: #2c1c07;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #6b3400;
+            font-size: 1rem;
+        }
+        button:active { transform: translateY(2px); }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .info-panel {
+            background: #00000099;
+            border-radius: 34px;
+            padding: 14px;
+            text-align: center;
+            color: #ffdca8;
+            margin-top: 20px;
+        }
+        .result-message {
+            font-size: 1rem;
+            padding: 14px;
+            border-radius: 40px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .win { background: #2d7842dd; border: 1px solid #ffdd88; color: #eaffdd; }
+        .lose { background: #a13d2cdd; border: 1px solid #ffbb99; color: #ffddcc; }
+        @media (max-width: 700px) {
+            .grid-32 { gap: 6px; }
+            .cell { font-size: 1rem; }
+            .current-multiplier-big { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="auth-overlay" id="authOverlay">
+    <div class="auth-modal">
+        <h2>⚡ MINER 32</h2>
+        <div id="serverStatus" class="server-status">🔄 Проверка подключения...</div>
+        <div id="authFormContainer"></div>
+    </div>
+</div>
+
+<div class="fullscreen" id="gameApp" style="display: none;">
+<div class="game-container">
+    <div class="top-bar">
+        <div class="balance-box">
+            <span class="balance-label">БАЛАНС</span>
+            <span class="balance-value" id="balanceDisplay">0</span>
+            <span class="currency-icon">₽</span>
+        </div>
+        <div class="user-info">
+            <span class="username-display" id="usernameDisplay"></span>
+            <button id="logoutHeaderBtn" class="action-btn logout-btn">🚪 ВЫЙТИ</button>
+        </div>
+        <div class="top-right-group">
+            <button id="depositBtn" class="action-btn">💳 ПОПОЛНИТЬ</button>
+            <button id="withdrawBtn" class="action-btn">🏧 ВЫВЕСТИ</button>
+        </div>
+    </div>
+
+    <div class="mine-area">
+        <div class="mine-header">
+            <div class="mine-stats">
+                <div class="mine-stat"><span>💣 МИН</span><span id="minesCountDisplay">3</span></div>
+                <div class="mine-stat"><span>💎 БЕЗОПАСНЫХ</span><span id="safeCountDisplay">29</span></div>
+                <div class="mine-stat"><span>✨ МНОЖИТЕЛЬ</span><span id="multiplierStat">1.00x</span></div>
+            </div>
+            <div class="mine-selector">
+                <div data-mines="3" class="mine-count-btn active">3 МИНЫ</div>
+                <div data-mines="5" class="mine-count-btn">5 МИН</div>
+                <div data-mines="16" class="mine-count-btn">16 МИН</div>
+            </div>
+        </div>
+
+        <div class="grid-32" id="mineGrid"></div>
+
+        <div class="multiplier-badge">
+            <div class="current-multiplier-big" id="bigMultiplier">1.00x</div>
+        </div>
+
+        <div id="resultArea" class="result-message" style="display: none;"></div>
+    </div>
+
+    <div class="bet-panel">
+        <div class="bet-control">
+            <label>₽ СТАВКА</label>
+            <input type="number" id="betAmount" value="100" step="10">
+            <span>₽</span>
+        </div>
+        <button id="startBtn">НАЧАТЬ</button>
+        <button id="cashoutBtn" disabled>ЗАБРАТЬ</button>
+    </div>
+
+    <div class="info-panel" id="infoArea">
+        💎 MINER 32 | Открывай ячейки, избегай мин
+    </div>
+</div>
+</div>
+
+<script>
+    (function() {
+        const API_URL = 'http://localhost:4000/users';
+        let currentUser = null;
+        let playerBalance = 0;
+        
+        // Игровые переменные
+        let currentBet = 100;
+        let selectedMines = 3;
+        const totalCells = 32;
+        let gameActive = false;
+        let minePositions = new Array(totalCells).fill(false);
+        let openedCells = new Array(totalCells).fill(false);
+        let openedSafe = 0;
+        let gameResult = null;
+        let currentMultiplier = 1.00;
+        
+        // DOM элементы
+        const authOverlay = document.getElementById('authOverlay');
+        const gameApp = document.getElementById('gameApp');
+        const balanceSpan = document.getElementById('balanceDisplay');
+        const usernameDisplaySpan = document.getElementById('usernameDisplay');
+        const minesCountSpan = document.getElementById('minesCountDisplay');
+        const safeCountSpan = document.getElementById('safeCountDisplay');
+        const multiplierStatSpan = document.getElementById('multiplierStat');
+        const bigMultiplierSpan = document.getElementById('bigMultiplier');
+        const startBtn = document.getElementById('startBtn');
+        const cashoutBtn = document.getElementById('cashoutBtn');
+        const betInput = document.getElementById('betAmount');
+        const infoPanel = document.getElementById('infoArea');
+        const resultDiv = document.getElementById('resultArea');
+        const gridContainer = document.getElementById('mineGrid');
+        const serverStatusSpan = document.getElementById('serverStatus');
+        
+        // Проверка подключения к серверу
+        async function checkServerConnection() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const response = await fetch('http://localhost:3000/', { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (serverStatusSpan) {
+                    serverStatusSpan.innerHTML = '✅ Сервер подключен';
+                    serverStatusSpan.style.color = '#88ff88';
+                }
+                return true;
+            } catch (error) {
+                if (serverStatusSpan) {
+                    serverStatusSpan.innerHTML = '❌ Сервер не запущен! Запустите: json-server --watch db.json --port 5000';
+                    serverStatusSpan.style.color = '#ff8866';
+                }
+                return false;
+            }
+        }
+        
+        // API функции
+        async function apiRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: { 'Content-Type': 'application/json', ...options.headers }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw new Error('Сервер не отвечает');
+            }
+        }
+        
+        async function getUsers() {
+            return await apiRequest(API_URL);
+        }
+        
+        async function addUser(user) {
+            return await apiRequest(API_URL, {
+                method: 'POST',
+                body: JSON.stringify(user)
+            });
+        }
+        
+        async function updateUser(id, data) {
+            return await apiRequest(`${API_URL}/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+        }
+        
+        async function register(username, password) {
+            const users = await getUsers();
+            if (users.find(u => u.username === username)) {
+                throw new Error('Пользователь уже существует');
+            }
+            const newUser = {
+                id: Date.now().toString(),
+                username,
+                password,
+                balance: 2500
+            };
+            await addUser(newUser);
+            return newUser;
+        }
+        
+        async function login(username, password) {
+            const users = await getUsers();
+            const user = users.find(u => u.username === username && u.password === password);
+            if (!user) {
+                throw new Error('Неверное имя или пароль');
+            }
+            return user;
+        }
+        
+        async function updateBalance(userId, newBalance) {
+            const users = await getUsers();
+            const user = users.find(u => u.id === userId);
+            if (!user) throw new Error('User not found');
+            user.balance = newBalance;
+            await updateUser(userId, user);
+            return user;
+        }
+        
+        async function syncBalance(newBalance) {
+            if (!currentUser) return;
+            playerBalance = newBalance;
+            balanceSpan.innerText = Math.floor(playerBalance);
+            await updateBalance(currentUser.id, playerBalance);
+            currentUser.balance = playerBalance;
+        }
+        
+        async function addToBalance(amount) {
+            await syncBalance(playerBalance + amount);
+        }
+        
+        async function subtractFromBalance(amount) {
+            if (playerBalance - amount < 0) throw new Error('Недостаточно средств');
+            await syncBalance(playerBalance - amount);
+        }
+        
+        // Игровая логика
+        function calculateMultiplier(mines, opened) {
+            if (opened === 0) return 1.00;
+            const safeTotal = 32 - mines;
+            if (opened > safeTotal) return 1.00;
+            let prob = 1.0;
+            for (let i = 0; i < opened; i++) {
+                prob *= (safeTotal - i) / (32 - i);
+            }
+            return Math.min(parseFloat((1 / prob).toFixed(3)), 500.0);
+        }
+        
+        function updateMultiplierDisplay() {
+            currentMultiplier = calculateMultiplier(selectedMines, openedSafe);
+            multiplierStatSpan.innerText = currentMultiplier.toFixed(2) + "x";
+            bigMultiplierSpan.innerText = currentMultiplier.toFixed(2) + "x";
+        }
+        
+        function generateMines(minesCount) {
+            let positions = new Array(totalCells).fill(false);
+            let indices = Array.from({length: totalCells}, (_, i) => i);
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            for (let i = 0; i < minesCount; i++) {
+                positions[indices[i]] = true;
+            }
+            return positions;
+        }
+        
+        function revealAllMines() {
+            for (let i = 0; i < totalCells; i++) {
+                if (minePositions[i] && !openedCells[i]) {
+                    openedCells[i] = true;
+                }
+            }
+            renderGrid();
+        }
+        
+        function renderGrid() {
+            if (!gridContainer) return;
+            gridContainer.innerHTML = '';
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                if (openedCells[i]) {
+                    cell.classList.add('opened');
+                    if (minePositions[i]) {
+                        cell.classList.add('mine');
+                        cell.innerText = '💣';
+                    } else {
+                        cell.classList.add('gem');
+                        cell.innerText = '💎';
+                    }
+                } else {
+                    cell.innerText = '?';
+                }
+                if (gameActive && !openedCells[i] && gameResult === null) {
+                    cell.style.cursor = 'pointer';
+                    cell.onclick = (function(idx) { 
+                        return function() { openCell(idx); }; 
+                    })(i);
+                } else {
+                    cell.style.cursor = 'default';
+                    cell.onclick = null;
+                }
+                gridContainer.appendChild(cell);
+            }
+        }
+        
+        function showMessage(type, title, detail) {
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result-message ' + (type === 'win' ? 'win' : 'lose');
+            resultDiv.innerHTML = type === 'win' ? `✅ ${title}<br>${detail}` : `💥 ${title}<br>${detail}`;
+            setTimeout(() => { resultDiv.style.display = 'none'; }, 4000);
+        }
+        
+        async function cashout() {
+            if (!gameActive || gameResult !== null) {
+                infoPanel.innerText = "❌ Нет активной игры!";
+                return;
+            }
+            const winAmount = currentBet * currentMultiplier;
+            await addToBalance(winAmount);
+            gameActive = false;
+            gameResult = 'cashed_out';
+            // Показываем все мины
+            for (let i = 0; i < totalCells; i++) {
+                if (minePositions[i] && !openedCells[i]) {
+                    openedCells[i] = true;
+                }
+            }
+            renderGrid();
+            showMessage('win', `ВЫ ЗАБРАЛИ ${winAmount.toFixed(2)} ₽`, `Множитель: ${currentMultiplier.toFixed(2)}x`);
+            infoPanel.innerHTML = `✅ Выигрыш ${winAmount.toFixed(2)} ₽ | Баланс: ${playerBalance} ₽`;
+            cashoutBtn.disabled = true;
+            startBtn.disabled = false;
+        }
+        
+        async function openCell(index) {
+            console.log('openCell called', index, 'gameActive:', gameActive, 'gameResult:', gameResult, 'opened:', openedCells[index]);
+            
+            if (!gameActive) {
+                console.log('Game not active');
+                return;
+            }
+            if (gameResult !== null) {
+                console.log('Game ended');
+                return;
+            }
+            if (openedCells[index]) {
+                console.log('Already opened');
+                return;
+            }
+            
+            if (minePositions[index]) {
+                // Проигрыш
+                console.log('MINE! Game over');
+                gameActive = false;
+                gameResult = 'lose';
+                openedCells[index] = true;
+                revealAllMines();
+                showMessage('lose', `МИНА! Проигрыш ${currentBet} ₽`, `Множитель был ${currentMultiplier.toFixed(2)}x`);
+                infoPanel.innerHTML = `💣 Проигрыш ${currentBet} ₽ | Баланс: ${playerBalance} ₽`;
+                cashoutBtn.disabled = true;
+                startBtn.disabled = false;
+                return;
+            }
+            
+            // Безопасная ячейка
+            console.log('Safe cell!');
+            openedCells[index] = true;
+            openedSafe++;
+            updateMultiplierDisplay();
+            renderGrid();
+            
+            const totalSafe = totalCells - selectedMines;
+            
+            // Проверка победы (все безопасные открыты)
+            if (openedSafe === totalSafe) {
+                const winAmount = currentBet * currentMultiplier;
+                await addToBalance(winAmount);
+                gameActive = false;
+                gameResult = 'win';
+                // Показываем оставшиеся мины
+                for (let i = 0; i < totalCells; i++) {
+                    if (minePositions[i] && !openedCells[i]) {
+                        openedCells[i] = true;
+                    }
+                }
+                renderGrid();
+                showMessage('win', `ПОБЕДА! ${winAmount.toFixed(2)} ₽`, `Множитель ${currentMultiplier.toFixed(2)}x`);
+                infoPanel.innerHTML = `🏆 ПОБЕДА! +${winAmount.toFixed(2)} ₽ | Баланс: ${playerBalance} ₽`;
+                cashoutBtn.disabled = true;
+                startBtn.disabled = false;
+                return;
+            }
+            
+            infoPanel.innerHTML = `✅ Открыто: ${openedSafe}/${totalSafe} | Множитель: ${currentMultiplier.toFixed(2)}x | Ставка: ${currentBet} ₽`;
+        }
+        
+        async function startGame() {
+            console.log('startGame called');
+            
+            if (gameActive) {
+                infoPanel.innerText = "⚠️ Завершите текущую игру!";
+                return;
+            }
+            
+            let betVal = parseFloat(betInput.value);
+            if (isNaN(betVal) || betVal < 5) betVal = 50;
+            betVal = Math.floor(betVal);
+            
+            if (betVal > playerBalance) {
+                infoPanel.innerText = `❌ Недостаточно средств! Баланс: ${playerBalance} ₽`;
+                return;
+            }
+            
+            currentBet = betVal;
+            
+            // Списываем ставку
+            await subtractFromBalance(currentBet);
+            
+            // Инициализация игры
+            gameActive = true;
+            gameResult = null;
+            openedSafe = 0;
+            minePositions = generateMines(selectedMines);
+            openedCells = new Array(totalCells).fill(false);
+            currentMultiplier = 1.00;
+            
+            updateMultiplierDisplay();
+            renderGrid();
+            
+            const totalSafe = totalCells - selectedMines;
+            infoPanel.innerHTML = `🎲 ИГРА! Мин: ${selectedMines} | Безопасных: ${totalSafe} | Ставка: ${currentBet} ₽ | Открывай ячейки!`;
+            resultDiv.style.display = 'none';
+            
+            cashoutBtn.disabled = false;
+            startBtn.disabled = true;
+            
+            console.log('Game started successfully', {gameActive, selectedMines, currentBet});
+        }
+        
+        function changeMines(count) {
+            if (gameActive) {
+                infoPanel.innerText = "❌ Нельзя сменить мины во время игры!";
+                return;
+            }
+            selectedMines = count;
+            minesCountSpan.innerText = selectedMines;
+            safeCountSpan.innerText = totalCells - selectedMines;
+            
+            // Сбрасываем игровое поле
+            minePositions = new Array(totalCells).fill(false);
+            openedCells = new Array(totalCells).fill(false);
+            openedSafe = 0;
+            currentMultiplier = 1.00;
+            updateMultiplierDisplay();
+            renderGrid();
+            
+            document.querySelectorAll('.mine-count-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-mines="${count}"]`).classList.add('active');
+        }
+        
+        async function handleDeposit() {
+            let amount = prompt("💰 Сумма пополнения (₽):", "500");
+            if (amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0) {
+                await addToBalance(Math.floor(parseFloat(amount)));
+                infoPanel.innerHTML = `✅ Пополнение! Баланс: ${playerBalance} ₽`;
+            }
+        }
+        
+        async function handleWithdraw() {
+            if (gameActive) {
+                infoPanel.innerText = "❌ Нельзя вывести во время игры!";
+                return;
+            }
+            let amount = prompt("🏧 Сумма вывода (₽):", "200");
+            if (amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && parseFloat(amount) <= playerBalance) {
+                await subtractFromBalance(Math.floor(parseFloat(amount)));
+                infoPanel.innerHTML = `💸 Выведено! Баланс: ${playerBalance} ₽`;
+            } else if (amount && parseFloat(amount) > playerBalance) {
+                alert("❌ Недостаточно средств!");
+            }
+        }
+        
+        function logout() {
+            currentUser = null;
+            gameActive = false;
+            authOverlay.style.display = 'flex';
+            gameApp.style.display = 'none';
+            showLoginForm();
+        }
+        
+        function resetGameUI() {
+            gameActive = false;
+            gameResult = null;
+            openedCells = new Array(totalCells).fill(false);
+            openedSafe = 0;
+            currentMultiplier = 1.00;
+            updateMultiplierDisplay();
+            renderGrid();
+            cashoutBtn.disabled = true;
+            startBtn.disabled = false;
+            infoPanel.innerHTML = `💎 MINER 32 | Баланс: ${playerBalance} ₽`;
+        }
+        
+        async function showLoginForm() {
+            const container = document.getElementById('authFormContainer');
+            container.innerHTML = `
+                <input type="text" id="authUsername" class="auth-input" placeholder="Имя пользователя">
+                <input type="password" id="authPassword" class="auth-input" placeholder="Пароль">
+                <button id="loginBtn" class="auth-btn">🔐 ВОЙТИ</button>
+                <div class="auth-switch" id="showRegisterBtn">📝 Нет аккаунта? Зарегистрироваться</div>
+                <div id="authError" class="error-msg"></div>
+            `;
+            
+            document.getElementById('loginBtn').addEventListener('click', async () => {
+                const username = document.getElementById('authUsername').value.trim();
+                const password = document.getElementById('authPassword').value;
+                const errorDiv = document.getElementById('authError');
+                try {
+                    const serverOk = await checkServerConnection();
+                    if (!serverOk) throw new Error('Сервер не запущен');
+                    const user = await login(username, password);
+                    currentUser = user;
+                    playerBalance = user.balance;
+                    balanceSpan.innerText = Math.floor(playerBalance);
+                    usernameDisplaySpan.innerText = user.username;
+                    authOverlay.style.display = 'none';
+                    gameApp.style.display = 'block';
+                    resetGameUI();
+                } catch (err) {
+                    errorDiv.innerText = err.message;
+                }
+            });
+            
+            document.getElementById('showRegisterBtn').addEventListener('click', showRegisterForm);
+        }
+        
+        async function showRegisterForm() {
+            const container = document.getElementById('authFormContainer');
+            container.innerHTML = `
+                <input type="text" id="authUsername" class="auth-input" placeholder="Имя пользователя">
+                <input type="password" id="authPassword" class="auth-input" placeholder="Пароль">
+                <button id="registerBtn" class="auth-btn">📝 ЗАРЕГИСТРИРОВАТЬСЯ</button>
+                <div class="auth-switch" id="showLoginBtn">🔐 Уже есть аккаунт? Войти</div>
+                <div id="authError" class="error-msg"></div>
+            `;
+            
+            document.getElementById('registerBtn').addEventListener('click', async () => {
+                const username = document.getElementById('authUsername').value.trim();
+                const password = document.getElementById('authPassword').value;
+                const errorDiv = document.getElementById('authError');
+                if (!username || !password) {
+                    errorDiv.innerText = 'Заполните все поля';
+                    return;
+                }
+                try {
+                    const serverOk = await checkServerConnection();
+                    if (!serverOk) throw new Error('Сервер не запущен');
+                    const newUser = await register(username, password);
+                    currentUser = newUser;
+                    playerBalance = newUser.balance;
+                    balanceSpan.innerText = Math.floor(playerBalance);
+                    usernameDisplaySpan.innerText = newUser.username;
+                    authOverlay.style.display = 'none';
+                    gameApp.style.display = 'block';
+                    resetGameUI();
+                } catch (err) {
+                    errorDiv.innerText = err.message;
+                }
+            });
+            
+            document.getElementById('showLoginBtn').addEventListener('click', showLoginForm);
+        }
+        
+        // Инициализация событий
+        function bindGameEvents() {
+            startBtn.addEventListener('click', startGame);
+            cashoutBtn.addEventListener('click', cashout);
+            document.getElementById('depositBtn').addEventListener('click', handleDeposit);
+            document.getElementById('withdrawBtn').addEventListener('click', handleWithdraw);
+            document.getElementById('logoutHeaderBtn').addEventListener('click', logout);
+            
+            document.querySelectorAll('.mine-count-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    changeMines(parseInt(btn.getAttribute('data-mines')));
+                });
+            });
+            
+            betInput.addEventListener('change', () => {
+                let v = parseFloat(betInput.value);
+                if (isNaN(v) || v < 5) betInput.value = 100;
+                else betInput.value = Math.floor(v);
+            });
+        }
+        
+        bindGameEvents();
+        checkServerConnection();
+        showLoginForm();
+        renderGrid();
+    })();
+</script>
+</body>
+</html>

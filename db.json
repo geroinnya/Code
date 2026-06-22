@@ -1,0 +1,21 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Artya",
+      "role": "admin"
+    },
+    {
+      "id": "2",
+      "name": "Player",
+      "role": "user"
+    },
+    {
+      "id": "g7oNS5Aw0Lo",
+      "username": "Artya",
+      "password": "Asd2008dsA",
+      "balance": 2000
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
